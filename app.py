@@ -13,8 +13,8 @@ from typing import List, Optional, Annotated
 
 from sqlalchemy.orm import Session
 
-from database import get_db, SessionLocal, engine
-from models import Receita, User, UserDB
+from database import SessionLocal, engine
+from models import Recipe, User, UserDB, RecipeDB, RecipeResponse
 
 from routers.auth_routes import auth_router
 from security import get_current_user, require_role
@@ -83,24 +83,94 @@ async def read_home(request: Request):
 async def list_users(db: db_dependency):
     return db.query(UserDB).all()
 
-# @app.post("/recipes/", response_model=RecipeResponse)
-# async def create_recipe(recipe: RecipeCreate, db: db_dependency):
-#     db_recipe = Recipe(
-#         title=recipe.title,
-#         description=recipe.description,
-#         post_time=recipe.post_time
-#     )
-#     db.add(db_recipe)
-#     db.commit()
-#     db.refresh(db_recipe)
-#     return db_recipe
-
-@app.get("/create-recipe", dependencies=[Depends(require_role("creator"))])
-def create_recipe(
-    #
-    #
+@app.post("/receitas/", response_model=RecipeResponse)
+async def criar_receita(
+        title: str = Form(...),
+        ingredients: str = Form(...),
+        preparation: str = Form(...),
+        time: int = Form(...),
+        image: Optional[UploadFile] = File(None),
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user),  # Garantir que seja um criador
 ):
-    return {"message": f"Recipe created"}
+    image_filename = None
+    if image:
+        image_filename = f"static/imgs/{image.filename}"
+        with open(image_filename, "wb") as buffer:
+            buffer.write(await image.read())
+
+    nova_receita = RecipeDB(
+        title=title,
+        ingredients=ingredients,
+        preparation=preparation,
+        time=time,
+        image_filename=image_filename,
+        creator_id=current_user.id,  # Associando a receita ao criador
+    )
+
+    db.add(nova_receita)
+    db.commit()
+    db.refresh(nova_receita)
+
+    return nova_receita
+
+@app.put("/receitas/{recipe_id}", response_model=Recipe)
+async def editar_receita(
+        recipe_id: int,
+        title: Optional[str] = None,
+        ingredients: Optional[str] = None,
+        preparation: Optional[str] = None,
+        time: Optional[int] = None,
+        image: Optional[UploadFile] = None,
+        is_visible: Optional[bool] = None,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user),  # Garantir que seja o criador
+):
+    receita = db.query(RecipeDB).filter(RecipeDB.id == recipe_id).first()
+
+    if not receita:
+        raise HTTPException(status_code=404, detail="Receita não encontrada")
+
+    if receita.creator_id != current_user.id:  # Verificar se o criador da receita é o usuário
+        raise HTTPException(status_code=403, detail="Você não tem permissão para editar esta receita")
+
+    # Atualizar os campos da receita
+    if title:
+        receita.title = title
+    if ingredients:
+        receita.ingredients = ingredients
+    if preparation:
+        receita.preparation = preparation
+    if time:
+        receita.time = time
+    if image:
+        image_filename = f"static/imgs/{image.filename}"
+        with open(image_filename, "wb") as buffer:
+            buffer.write(await image.read())
+        receita.image_filename = image_filename
+    if is_visible is not None:
+        receita.is_visible = is_visible
+
+    db.commit()
+    db.refresh(receita)
+
+    return receita
+
+
+@app.get("/receitas/", response_model=List[RecipeResponse])
+async def listar_receitas(db: Session = Depends(get_db)):
+    return db.query(RecipeDB).filter(RecipeDB.is_visible == True).all()  # Mostrar apenas as visíveis
+
+
+@app.get("/receitas/{recipe_id}", response_model=Recipe)
+async def ver_receita(recipe_id: int, db: Session = Depends(get_db)):
+    receita = db.query(RecipeDB).filter(RecipeDB.id == recipe_id).first()
+
+    if not receita or not receita.is_visible:
+        raise HTTPException(status_code=404, detail="Receita não encontrada ou não visível")
+
+    return receita
+
 
 
 @app.get("/admin-page", response_class=HTMLResponse, dependencies=[Depends(require_role("creator"))])

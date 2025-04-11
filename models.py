@@ -1,7 +1,10 @@
 from typing import Optional
 from pydantic import BaseModel
-from sqlalchemy import Boolean, Column, Integer, String, DateTime
+from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey
 from datetime import datetime
+
+from sqlalchemy.orm import relationship
+
 from database import Base
 
 
@@ -25,16 +28,8 @@ class UserRegistration(BaseModel):
     email: str
     password: str
 
-    role: str 
+    role: str
 
-
-# class Recipe(Base):
-#     __tablename__ = "recipes"
-
-#     id = Column(Integer, primary_key=True, index=True)
-#     title = Column(String, index=True)
-#     description = Column(String)
-#     post_time = Column(DateTime, default=datetime.utcnow)
 
 class UserDB(Base):
     __tablename__ = "users"
@@ -45,4 +40,46 @@ class UserDB(Base):
     hashed_password = Column(String)
     disabled = Column(Boolean, default=False)
     role = Column(String, default="client")
+
+    recipes = relationship("RecipeDB", back_populates="creator")  # Relacionamento com as receitas
+
+
+class Recipe(BaseModel):
+    id: Optional[int] = None  # O id pode ser None, pois será atribuído pelo banco de dados
+    title: str
+    ingredients: str
+    preparation: str
+    time: int
+    image_filename: Optional[str] = None
+    is_visible: bool = True
+
+    class Config:
+        orm_mode = True
+
+class RecipeDB(Base):
+    __tablename__ = "receitas"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    ingredients = Column(String, nullable=False)
+    preparation = Column(String, nullable=False)
+    time = Column(Integer, nullable=False)
+    image_filename = Column(String, nullable=True)
+    is_visible = Column(Boolean, default=True)  # Adicionando o campo de visibilidade
+    creator_id = Column(Integer, ForeignKey("users.id"))  # Relacionando com o criador (usuário)
+
+    creator = relationship("UserDB", back_populates="recipes")  # Relacionamento com a tabela de usuários
+
+
+class RecipeResponse(BaseModel):
+    id: int
+    title: str
+    ingredients: str
+    preparation: str
+    time: int
+    image_filename: Optional[str] = None
+    is_visible: Optional[bool] = True  # se você estiver usando esse campo
+
+    class Config:
+        orm_mode = True
 
