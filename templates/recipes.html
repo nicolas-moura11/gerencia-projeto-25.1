@@ -17,6 +17,30 @@
     </div>
       
     <h1 class="text-center my-4">Receitas mais populares</h1>
+    
+    <div class="container my-4" style="max-width: 700px;">
+        <h2>Adicionar Nova Receita</h2>
+        <form id="formulario-receita">
+            <div class="mb-3">
+                <label for="titulo" class="form-label">Título</label>
+                <input type="text" class="form-control" id="titulo" name="title" required>
+            </div>
+            <div class="mb-3">
+                <label for="descricao" class="form-label">Descrição (modo de preparo)</label>
+                <textarea class="form-control" id="descricao" name="description" rows="3" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="imagem" class="form-label">URL da Imagem</label>
+                <input type="url" class="form-control" id="imagem" name="image_url">
+            </div>
+            <div class="mb-3">
+                <label for="ingredientes" class="form-label">Ingredientes (separados por vírgula)</label>
+                <input type="text" class="form-control" id="ingredientes" name="ingredients" required>
+            </div>
+            <button type="submit" class="btn btn-success">Cadastrar Receita</button>
+        </form>
+    </div>
+    
     <div id="receitas" class="container mx-auto row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4" style="max-width: 1200px;"></div>
 
     <div id="loading" class="text-center my-5" style="display: none;">
@@ -38,9 +62,56 @@
             </div>
         </div>
     </div>
-
     
-
+    <script>
+        document.getElementById("formulario-receita").addEventListener("submit", async function(event) {
+          event.preventDefault();
+      
+          const token = localStorage.getItem("token");
+          if (!token) {
+            alert("Você precisa estar logado.");
+            return;
+          }
+      
+          const title = document.getElementById("titulo").value.trim();
+          const description = document.getElementById("descricao").value.trim();
+          const image_url = document.getElementById("imagem").value.trim();
+          const ingredientsRaw = document.getElementById("ingredientes").value.trim();
+      
+          const ingredients = ingredientsRaw.split(",").map(ing => ing.trim()).filter(Boolean);
+      
+          const payload = {
+            title,
+            description,
+            image_url,
+            ingredients
+          };
+      
+          try {
+            const response = await fetch("/receitas", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+              },
+              body: JSON.stringify(payload)
+            });
+      
+            if (response.ok) {
+              alert("Receita cadastrada com sucesso!");
+              document.getElementById("formulario-receita").reset();
+              carregarReceitas(); // recarrega a lista
+            } else {
+              const erro = await response.json();
+              alert("Erro: " + (erro.detail || "Não foi possível cadastrar a receita."));
+            }
+          } catch (e) {
+            console.error("Erro ao cadastrar:", e);
+            alert("Erro inesperado ao cadastrar a receita.");
+          }
+        });
+    </script>
+      
     <script>
         async function carregarReceitas() {
             document.getElementById('loading').style.display = 'block'; 
