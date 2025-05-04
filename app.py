@@ -161,4 +161,30 @@ async def update_recipe(
 
     return recipe
 
+@app.get("/search_recipes")
+def search_recipes(request: Request, ingredients: str, db: Session = Depends(get_db)):
+    termos = [termo.strip().lower() for termo in ingredients.split(",") if termo.strip()]
 
+    if not termos:
+        return templates.TemplateResponse("resultados.html", {
+            "request": request,
+            "receitas": [],
+            "ingredientes": ingredients
+        })
+
+    # Começa com a primeira cláusula
+    query = db.query(RecipeDB).filter(RecipeDB.ingredients.ilike(f"%{termos[0]}%"))
+
+    # Adiciona OR para os demais termos
+    for termo in termos[1:]:
+        query = query.union(
+            db.query(RecipeDB).filter(RecipeDB.ingredients.ilike(f"%{termo}%"))
+        )
+
+    receitas = query.all()
+
+    return templates.TemplateResponse("resultados.html", {
+        "request": request,
+        "receitas": receitas,
+        "ingredientes": ingredients
+    })
