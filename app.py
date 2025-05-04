@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from routers.auth_routes import auth_router
 from security import get_current_user, require_role
-from models import Recipe, User, UserDB 
+from models import Recipe, User, UserDB
 from pydantic import BaseModel
 from typing import List, Annotated
 from database import SessionLocal, engine
@@ -80,6 +80,34 @@ def receitas_page(request: Request):
 @app.get("/auth/status")
 async def auth_status(user: User = Depends(get_current_user)):
     return {"is_authenticated": True}
+
+@app.get("/search_recipes")
+def search_recipes(request: Request, ingredients: str, db: Session = Depends(get_db)):
+    termos = [termo.strip().lower() for termo in ingredients.split(",") if termo.strip()]
+
+    if not termos:
+        return templates.TemplateResponse("resultados.html", {
+            "request": request,
+            "receitas": [],
+            "ingredientes": ingredients
+        })
+
+    # Começa com a primeira cláusula
+    query = db.query(Recipe).filter(Recipe.ingredients.ilike(f"%{termos[0]}%"))
+
+    # Adiciona OR para os demais termos
+    for termo in termos[1:]:
+        query = query.union(
+            db.query(Recipe).filter(Recipe.ingredients.ilike(f"%{termo}%"))
+        )
+
+    receitas = query.all()
+
+    return templates.TemplateResponse("resultados.html", {
+        "request": request,
+        "receitas": receitas,
+        "ingredientes": ingredients
+    })
 
 # @router.get("/nova-receita", response_class=HTMLResponse)
 # def nova_receita_page(request: Request):
