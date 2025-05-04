@@ -43,6 +43,18 @@
         </div>
     </header>
 
+    <div class="container mt-4">
+        <h3 class="mb-3">Buscar Receitas por Ingredientes</h3>
+        <form action="/search_recipes" method="get" class="row g-3">
+            <div class="col-md-10">
+                <input type="text" id="ingredientes" name="ingredientes" class="form-control" placeholder="Ex: arroz, feijão, frango" required>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-success w-100">Buscar</button>
+            </div>
+        </form>
+    </div>
+
     <div class="modal fade" id="RecipeModal" tabindex="-1" aria-labelledby="adminModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
           <div class="modal-content">

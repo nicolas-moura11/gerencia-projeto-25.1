@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Resultados da busca por: "{{ ingredientes }}"</h2>
+
+    {% if receitas %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for receita in receitas %}
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                {% if receita.image_filename %}
+                <img src="{{ url_for('static', path='imgs/imgs/' ~ receita.image_filename) }}"
+                     class="card-img-top" alt="Imagem da receita">
+                {% else %}
+                <img src="{{ url_for('static', path='imgs/imgs/sem_imagem.jpg') }}"
+                     class="card-img-top" alt="Imagem padrão">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ receita.title }}</h5>
+                    <p class="card-text"><strong>Ingredientes:</strong> {{ receita.ingredients }}</p>
+                    <p class="card-text"><strong>Modo de preparo:</strong> {{ receita.preparation }}</p>
+                    <p class="card-text"><strong>Tempo:</strong> {{ receita.time }} min</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-warning mt-4" role="alert">
+        Nenhuma receita encontrada com os ingredientes informados.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
