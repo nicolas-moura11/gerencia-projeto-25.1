@@ -101,3 +101,6 @@ class PasswordReset(BaseModel):
 class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
+
+
+fake_users_db = {}
