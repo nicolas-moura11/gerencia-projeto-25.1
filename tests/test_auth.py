@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from app import app  
-from models import UserRegistration, Token
-from security import fake_users_db, get_password_hash 
+from models import UserRegistration, Token, fake_users_db
+from security import get_password_hash 
 
 client = TestClient(app)
 
