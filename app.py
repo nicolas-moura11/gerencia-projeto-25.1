@@ -2,7 +2,7 @@ from fastapi import APIRouter, FastAPI, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from routers.auth_routes import auth_router
+from routes.auth_routes import auth_router
 from security import get_current_user, require_role
 from models import Recipe, User, UserDB 
 from pydantic import BaseModel
@@ -11,7 +11,7 @@ from database import SessionLocal, engine
 from sqlalchemy.orm import Session
 from datetime import datetime
 from fastapi.middleware.cors import CORSMiddleware
-from routers import recipes
+from routes import recipes
 
 app = FastAPI()
 app.include_router(recipes.router)
