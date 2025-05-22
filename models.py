@@ -42,7 +42,7 @@ class UserDB(Base):
     disabled = Column(Boolean, default=False)
     role = Column(String, default="client")
 
-    User.shopping_list = relationship("ShoppingListItem", back_populates="user", cascade="all, delete-orphan")
+    shopping_list = relationship("ShoppingListItem", back_populates="user", cascade="all, delete-orphan")
 
 
 class Ingredient(Base):
@@ -99,11 +99,11 @@ class ShoppingListItem(Base):
     __tablename__ = "shopping_list_items"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))  # ajuste se necessário
+    user_id = Column(Integer, ForeignKey("users.id"))
     ingredient = Column(String, nullable=False)
     quantity = Column(String, nullable=True)
 
-    user = relationship("User", back_populates="shopping_list")
+    user = relationship("UserDB", back_populates="shopping_list")
 
 
 class ShoppingListItemCreate(BaseModel):
