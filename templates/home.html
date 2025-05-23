@@ -7,6 +7,7 @@
     <link rel="stylesheet" type="text/css" href="/static/css/home.css">
     <link rel="shortcut icon" href="/static/imgs/imgs/logo.png" type="image/x-icon">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Lobster&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -17,12 +18,12 @@
             <img src="static/imgs/imgs/logo.png" alt="Receita Fácil" class="img-fluid" style="max-height: 70px;">
             <h1 class="ms-3 mb-0 fs-4 fw-semibold text-dark" style="font-family: 'Poppins', sans-serif;">ReceitaFácil</h1>
           </div>
-      
+
           <nav class="navbar navbar-expand-lg">
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
               <span class="navbar-toggler-icon"></span>
             </button>
-      
+
             <div class="collapse navbar-collapse" id="navbarNav">
               <ul class="navbar-nav gap-2">
                 <li class="nav-item">
@@ -34,6 +35,11 @@
                 <li class="nav-item">
                   <a class="nav-link fw-medium text-dark" href="#">Contato</a>
                 </li>
+                  <li class="nav-item">
+                      <a class="nav-link fw-medium text-dark" href="#" data-bs-toggle="modal" data-bs-target="#modalListaCompras">
+                          Lista de Compras
+                      </a>
+                  </li>
               </ul>
             </div>
           </nav>
@@ -75,10 +81,30 @@
                             <input type="text" class="form-control" id="ingredients" required>
                         </div>
                     </div>
-                    <div class="modal-footer">
+                    <div class="modal-footer d-flex justify-content-between">
                         <button type="submit" class="btn btn-primary">Criar Receita</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+    <!-- Modal da Lista de Compras -->
+    <div class="modal fade" id="modalListaCompras" tabindex="-1" aria-labelledby="modalListaComprasLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalListaComprasLabel">Lista de Compras</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <ul id="listaCompras" class="list-group">
+                        <!-- Itens da lista serão inseridos aqui via JavaScript -->
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-danger" onclick="limparListaCompras()">Limpar Lista</button>
+                </div>
             </div>
         </div>
     </div>
@@ -158,6 +184,62 @@
                 alert("Erro de rede ao criar receita");
             }
         });
+    });
+<!--
+    document.getElementById("add-to-shopping").addEventListener("click", async function () {
+        const ingredients = document.getElementById("ingredients").value.split(',');
+        const token = localStorage.getItem("token");
+
+        for (const ingredient of ingredients) {
+            try {
+                const response = await fetch("/shopping-list", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ ingredient: ingredient.trim(), quantity: "" })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erro ao adicionar ${ingredient}`);
+                }
+            } catch (error) {
+                console.error("Erro:", error);
+                alert("Erro ao adicionar à lista de compras.");
+                return;
+            }
+        }
+
+        alert("Ingredientes adicionados à lista de compras!");
+    });
+-->
+
+    function exibirListaCompras() {
+        const lista = JSON.parse(localStorage.getItem('listaCompras')) || [];
+        const ul = document.getElementById('itensListaCompras');
+
+        ul.innerHTML = ''; // Limpa a lista atual
+
+        if (lista.length === 0) {
+            ul.innerHTML = '<li class="list-group-item text-muted">Nenhum item na lista.</li>';
+        } else {
+            lista.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item';
+                li.textContent = item;
+                ul.appendChild(li);
+            });
+        }
+    }
+    // Atualiza a lista toda vez que a modal for aberta
+    const modalLista = document.getElementById('modalListaCompras');
+    modalLista.addEventListener('show.bs.modal', exibirListaCompras);
+
+    // Botão de limpar lista
+    document.getElementById('limparLista').addEventListener('click', () => {
+        localStorage.removeItem('listaCompras');
+        exibirListaCompras();
     });
     </script>
 

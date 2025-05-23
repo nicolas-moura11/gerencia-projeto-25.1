@@ -1,3 +1,5 @@
+'''
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from models import ShoppingListItem
@@ -26,3 +28,4 @@ def delete_item(item_id: int, db: Session = Depends(get_db), user = Depends(get_
     db.delete(item)
     db.commit()
     return {"message": "Item removido com sucesso"}
+'''

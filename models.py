@@ -42,7 +42,7 @@ class UserDB(Base):
     disabled = Column(Boolean, default=False)
     role = Column(String, default="client")
 
-    shopping_list = relationship("ShoppingListItem", back_populates="user", cascade="all, delete-orphan")
+    #shopping_list = relationship("ShoppingListItem", back_populates="user", cascade="all, delete-orphan")
 
 
 class Ingredient(Base):
@@ -95,7 +95,7 @@ class RecipeResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-class ShoppingListItem(Base):
+'''class ShoppingListItem(Base):
     __tablename__ = "shopping_list_items"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -114,7 +114,7 @@ class ShoppingListItemRead(ShoppingListItemCreate):
     id: int
     class Config:
         from_attributes = True
-
+'''
 
 class PasswordReset(BaseModel):
     email: EmailStr

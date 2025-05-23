@@ -1,4 +1,4 @@
-from fastapi import APIRouter, FastAPI, Request, Depends, HTTPException, Form
+from fastapi import APIRouter, FastAPI, Request, Depends, HTTPException, Form, Body
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -6,7 +6,8 @@ from starlette.responses import RedirectResponse
 
 from routers.auth_routes import auth_router
 from security import get_current_user, require_role
-from models import Recipe, User, UserDB, ShoppingListItem, ShoppingListItemRead, ShoppingListItemCreate
+from models import Recipe, User, UserDB
+#from models import ShoppingListItem, ShoppingListItemRead, ShoppingListItemCreate
 from pydantic import BaseModel
 from typing import List, Annotated
 from database import SessionLocal, engine
@@ -83,18 +84,21 @@ def receitas_page(request: Request):
 async def auth_status(user: User = Depends(get_current_user)):
     return {"is_authenticated": True}
 
+'''
 @app.get("/shopping-list")
 def view_shopping_list(request: Request, db: Session = Depends(get_db), user = Depends(get_current_user)):
     items = db.query(ShoppingListItem).filter_by(user_id=user.id).all()
     return templates.TemplateResponse("shopping_list.html", {"request": request, "shopping_list": items})
 
 @app.post("/shopping-list")
-def add_item_html(request: Request, ingredient: str = Form(...), quantity: str = Form(None),
+def add_item_json(data: dict = Body(...),
                   db: Session = Depends(get_db), user = Depends(get_current_user)):
+    ingredient = data.get("ingredient")
+    quantity = data.get("quantity", "")
     item = ShoppingListItem(ingredient=ingredient, quantity=quantity, user_id=user.id)
     db.add(item)
     db.commit()
-    return RedirectResponse(url="/shopping-list", status_code=303)
+    return {"message": "Item adicionado à lista de compras"}
 
 @app.post("/shopping-list/delete/{item_id}")
 def remove_item_html(item_id: int, db: Session = Depends(get_db), user = Depends(get_current_user)):
@@ -112,7 +116,7 @@ def add_from_recipe(recipe_id: int, ingredients: List[str] = Form(...),
         db.add(item)
     db.commit()
     return RedirectResponse(url="/shopping-list", status_code=303)
-
+'''
 
 @router.get("/me")
 def get_user_info(user = Depends(get_current_user)):
