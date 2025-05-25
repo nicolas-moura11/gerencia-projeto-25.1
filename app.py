@@ -3,18 +3,16 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.responses import RedirectResponse
-
-from routers.auth_routes import auth_router
+from routes.auth_routes import auth_router
 from security import get_current_user, require_role
-from models import Recipe, User, UserDB
-#from models import ShoppingListItem, ShoppingListItemRead, ShoppingListItemCreate
+from models import Recipe, User, UserDB 
 from pydantic import BaseModel
 from typing import List, Annotated
 from database import SessionLocal, engine
 from sqlalchemy.orm import Session
 from datetime import datetime
 from fastapi.middleware.cors import CORSMiddleware
-from routers import recipes
+from routes import recipes
 
 app = FastAPI()
 app.include_router(recipes.router)
@@ -84,39 +82,6 @@ def receitas_page(request: Request):
 async def auth_status(user: User = Depends(get_current_user)):
     return {"is_authenticated": True}
 
-'''
-@app.get("/shopping-list")
-def view_shopping_list(request: Request, db: Session = Depends(get_db), user = Depends(get_current_user)):
-    items = db.query(ShoppingListItem).filter_by(user_id=user.id).all()
-    return templates.TemplateResponse("shopping_list.html", {"request": request, "shopping_list": items})
-
-@app.post("/shopping-list")
-def add_item_json(data: dict = Body(...),
-                  db: Session = Depends(get_db), user = Depends(get_current_user)):
-    ingredient = data.get("ingredient")
-    quantity = data.get("quantity", "")
-    item = ShoppingListItem(ingredient=ingredient, quantity=quantity, user_id=user.id)
-    db.add(item)
-    db.commit()
-    return {"message": "Item adicionado à lista de compras"}
-
-@app.post("/shopping-list/delete/{item_id}")
-def remove_item_html(item_id: int, db: Session = Depends(get_db), user = Depends(get_current_user)):
-    item = db.query(ShoppingListItem).filter_by(id=item_id, user_id=user.id).first()
-    if item:
-        db.delete(item)
-        db.commit()
-    return RedirectResponse(url="/shopping-list", status_code=303)
-
-@app.post("/shopping-list/from-recipe/{recipe_id}")
-def add_from_recipe(recipe_id: int, ingredients: List[str] = Form(...),
-                    db: Session = Depends(get_db), user = Depends(get_current_user)):
-    for ing in ingredients:
-        item = ShoppingListItem(ingredient=ing, quantity=None, user_id=user.id)
-        db.add(item)
-    db.commit()
-    return RedirectResponse(url="/shopping-list", status_code=303)
-'''
 
 @router.get("/me")
 def get_user_info(user = Depends(get_current_user)):
