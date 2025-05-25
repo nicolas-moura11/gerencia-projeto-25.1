@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Receitas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 <body>
     <div class="position-fixed bottom-0 end-0 p-1" style="margin-bottom: 55px; z-index: 1055;">
@@ -113,7 +114,11 @@
         </div>
       </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
+        let listaDeCompras = [];
+
         async function verificarUsuario() {
             const token = localStorage.getItem('token');
             
@@ -171,50 +176,55 @@
     }
 
         function exibirReceitas(receitas, userRole) {
-        const container = document.getElementById('receitas');
-        container.innerHTML = ''; // Limpa a lista de receitas
+            const container = document.getElementById('receitas');
+            container.innerHTML = ''; // Limpa a lista de receitas
 
-        receitas.forEach((receita) => {
-            const div = document.createElement('div');
-            div.classList.add('col');
+            receitas.forEach((receita) => {
+                const div = document.createElement('div');
+                div.classList.add('col');
 
-            div.innerHTML = `
-                <div class="card h-100">
-                    ${receita.image_url ? 
+                div.innerHTML = `
+            <div class="card h-100 d-flex flex-column">
+                ${receita.image_url ?
                         `<img src="${receita.image_url}" class="card-img-top img-fluid" style="height: 240px; object-fit: cover;" alt="${receita.title}">` :
                         `<div class="card-img-top" style="height: 200px; background-color: #f0f0f0;"></div>`
-                    }
-                    <div class="card-body">
-                        <h5 class="card-title">${receita.title}</h5>
-                        <p><strong>Ingredientes:</strong> ${receita.ingredients.map(i => i.name).join(', ')}</p>
-                        <div class="d-flex gap-2">
+                        }
+
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">${receita.title}</h5>
+                    <p><strong>Ingredientes:</strong> ${receita.ingredients.map(i => i.name).join(', ')}</p>
+
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <button class="btn btn-outline-primary btn-sm" type="button"
                                 onclick="verPreparoComVerificacao('${receita.title.replace(/'/g, "\\'")}', \`${receita.description.replace(/`/g, '\\`')}\`)">
-                                Ver preparo
-                            </button>
+                        Ver preparo
+                        </button>
+
                             <button class="btn btn-outline-success btn-sm" type="button"
-                            onclick='adicionarListaCompras(${JSON.stringify(receita.ingredients)})'>
-                            Adicionar à lista de compras 🛒
+                                onclick='salvarIngredientesNaLista(${JSON.stringify(receita.ingredients)})'>
+                                Adicionar à lista de compras 🛒
                             </button>
+
+                        ${userRole === "creator" ? `
+                        <button class="btn btn-outline-danger btn-sm" type="button"
+                        onclick="confirmarExclusao(${receita.id}, '${receita.title.replace(/'/g, "\\'")}')">
+                        Remover
+                        </button>` : ''}
+
                             ${userRole === "creator" ? `
-                                <button class="btn btn-outline-danger btn-sm" type="button"
-                                    onclick="confirmarExclusao(${receita.id}, '${receita.title.replace(/'/g, "\\'")}')">
-                                    Remover
-                                </button>` : ''}
-                            ${userRole === "creator" ? `
-                                <button class="btn btn-lg" type="button"
-                                    onclick="editarReceita(${receita.id})">
-                                    <i class="bi bi-tools"></i> ⚙️
-                                </button>` : ''}
+                        <button class="btn btn-outline-secondary btn-sm" type="button"
+                        onclick="editarReceita(${receita.id})">
+                        <i class="bi bi-gear-fill"></i>
+                        </button>` : ''}
                         </div>
                     </div>
                 </div>
-                
-            `;
-            container.appendChild(div);
-            });
+            </div>
+        `;
 
-            
+                container.appendChild(div);
+            });
         }
 
         function abrirModal(titulo, descricao) {
@@ -355,16 +365,24 @@
             alert("Erro inesperado ao atualizar.");
         }
     }
-        function adicionarListaCompras(ingredientes) {
-            const listaAtual = JSON.parse(localStorage.getItem('lista_compras')) || [];
+
+        function salvarIngredientesNaLista(ingredientes) {
+            const listaAtual = JSON.parse(localStorage.getItem('listaDeCompras')) || [];
+            const nomesAtuais = listaAtual.map(item => item.toLowerCase());
 
             ingredientes.forEach(ing => {
-                if (!listaAtual.some(item => item.name.toLowerCase() === ing.name.toLowerCase())) {
-                    listaAtual.push({ name: ing.name });
+                const nome = ing.name.trim();
+                if (!nomesAtuais.includes(nome.toLowerCase())) {
+                    listaAtual.push(nome);
                 }
             });
 
-            localStorage.setItem('lista_compras', JSON.stringify(listaAtual));
+            localStorage.setItem('listaDeCompras', JSON.stringify(listaAtual));
+
+            // Atualiza visualmente o modal imediatamente
+            if (typeof adicionarListaComprasHome === 'function') {
+                adicionarListaComprasHome();
+            }
 
             const toast = new bootstrap.Toast(document.getElementById('toastListaCompras'));
             toast.show();
@@ -372,6 +390,5 @@
 
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
