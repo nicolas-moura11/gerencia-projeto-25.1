@@ -76,6 +76,14 @@
             </div>
         </div>
     </div>
+    <div class="position-fixed bottom-0 end-0 p-3" style="margin-bottom: 110px; z-index: 1055;">
+        <div id="toastListaCompras" class="toast align-items-center text-bg-info border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">Ingredientes adicionados à lista de compras!</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
 
     <div class="modal fade" id="modalEditarReceita" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
@@ -115,7 +123,11 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
+        let listaDeCompras = [];
+
         let userRole = null;
         async function verificarUsuario() {
             const token = localStorage.getItem('token');
@@ -180,8 +192,14 @@
             <div class="d-flex justify-content-between mt-3">
               <button class="btn btn-outline-primary btn-sm"
                       onclick="verPreparoComVerificacao('${r.title}','${r.description}')">
-                Ver preparo
+                Ver preparo 📖
               </button>
+
+              <button class="btn btn-outline-success btn-sm" type="button"
+                      onclick='salvarIngredientesNaLista(${JSON.stringify(r.ingredients)})'>
+                Adicionar à lista de compras 🛒
+              </button>
+
               ${role === 'creator'
                         ? `<button class="btn btn-outline-danger btn-sm"
                            onclick="confirmarExclusao(${r.id},'${r.title}')">
@@ -343,14 +361,36 @@
                 const { auth, role } = await verificarUsuario();
                 carregarReceitas(auth, role);
 
-            } catch (err) {
-                console.error("Erro inesperado:", err);
-                alert("Erro inesperado ao atualizar.");
-            }
+        } catch (err) {
+            console.error("Erro inesperado:", err);
+            alert("Erro inesperado ao atualizar.");
         }
+    }
+
+        function salvarIngredientesNaLista(ingredientes) {
+            const listaAtual = JSON.parse(localStorage.getItem('listaDeCompras')) || [];
+            const nomesAtuais = listaAtual.map(item => item.toLowerCase());
+
+            ingredientes.forEach(ing => {
+                const nome = ing.name.trim();
+                if (!nomesAtuais.includes(nome.toLowerCase())) {
+                    listaAtual.push(nome);
+                }
+            });
+
+            localStorage.setItem('listaDeCompras', JSON.stringify(listaAtual));
+
+            // Atualiza visualmente o modal imediatamente
+            if (typeof adicionarListaComprasHome === 'function') {
+                adicionarListaComprasHome();
+            }
+
+            const toast = new bootstrap.Toast(document.getElementById('toastListaCompras'));
+            toast.show();
+        }
+
     </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
