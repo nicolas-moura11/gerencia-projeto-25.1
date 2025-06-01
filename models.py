@@ -1,6 +1,6 @@
 from typing import List, Optional
 from pydantic import BaseModel, EmailStr, ConfigDict
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, Table
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, Table, UniqueConstraint
 from datetime import datetime
 from sqlalchemy.orm import relationship
 from database import Base
@@ -42,6 +42,8 @@ class UserDB(Base):
     disabled = Column(Boolean, default=False)
     role = Column(String, default="client")
 
+    likes = relationship("Curtida", back_populates="user")
+
     #shopping_list = relationship("ShoppingListItem", back_populates="user", cascade="all, delete-orphan")
 
 
@@ -59,6 +61,7 @@ class Recipe(Base):
     description = Column(String)
     image_url = Column(String, nullable=True)
 
+    likes = relationship("Curtida", back_populates="recipe")
     ingredients = relationship("Ingredient", secondary="recipe_ingredients", backref="recipes")
 
 
@@ -94,6 +97,29 @@ class RecipeResponse(BaseModel):
     ingredients: List[IngredientResponse]
 
     model_config = ConfigDict(from_attributes=True)
+
+class Curtida(Base):
+    __tablename__ = "curtidas"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    recipe_id = Column(Integer, ForeignKey("recipes.id"))
+
+    user = relationship("UserDB", back_populates="likes")
+    recipe = relationship("Recipe", back_populates="likes")
+
+    __table_args__ = (
+        # Garante que um usuário curta uma receita só uma vez
+        UniqueConstraint("user_id", "recipe_id", name="unique_user_recipe"),
+    )
+
+class CurtidaResponse(BaseModel):
+    recipe_id: int
+    user_id: int
+    curtido: bool
+
+    model_config = ConfigDict(from_attributes=True)
+
 
 '''class ShoppingListItem(Base):
     __tablename__ = "shopping_list_items"

@@ -13,9 +13,12 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 from fastapi.middleware.cors import CORSMiddleware
 from routes import recipes
+from routers import curtidas
+
 
 app = FastAPI()
 app.include_router(recipes.router)
+app.include_router(curtidas.router)
 router = APIRouter()
 
 app.add_middleware(

@@ -67,60 +67,72 @@ function exibirReceitas(receitas, userRole) {
         const div = document.createElement('div');
         div.classList.add('col');
 
+        const imageHTML = receita.image_url ?
+            `<img src="${receita.image_url}" class="card-img-top img-fluid" style="height: 240px; object-fit: cover;" alt="${receita.title}">` :
+            `<div class="card-img-top d-flex align-items-center justify-content-center text-secondary bg-light" style="height: 240px;">
+                <i class="bi bi-image" style="font-size: 4rem;"></i>
+            </div>`;
+
+        const botoesHTML = `
+            <div class="d-flex flex-wrap gap-2 align-items-center mt-auto pt-3 border-top">
+                <button class="btn btn-primary btn-sm" type="button"
+                    onclick="verPreparoComVerificacao('${receita.title.replace(/'/g, "\\'")}', \`${receita.description.replace(/`/g, '\\`')}\`)">
+                    <i class="bi bi-book me-1"></i> Ver preparo
+                </button>
+
+                <button class="btn btn-success btn-sm" type="button"
+                    onclick='salvarIngredientesNaLista(${JSON.stringify(receita.ingredients)})'>
+                    <i class="bi bi-cart"></i> Adicionar à lista
+                </button>
+
+                <button id="btnCurtir-${receita.id}" class="btn btn-outline-danger btn-sm" onclick="curtirReceita(${receita.id})">
+                    ❤️ <span id="qtdCurtidas-${receita.id}">${receita.likes || 0} </span>
+                </button>
+        
+
+                ${userRole === "creator" ? `
+                    <div class="dropdown">
+                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Ações
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <button class="dropdown-item text-danger" type="button"
+                                    onclick="confirmarExclusao(${receita.id}, '${receita.title.replace(/'/g, "\\'")}')">
+                                    <i class="bi bi-trash me-1"></i> Remover
+                                </button>
+                            </li>
+                            <li>
+                                <button class="dropdown-item" type="button"
+                                    onclick="editarReceita(${receita.id})">
+                                    <i class="bi bi-gear me-1"></i> Editar
+                                </button>
+                            </li>
+                        </ul>
+                    </div>` : ''
+        }
+            </div>
+        `;
+
         div.innerHTML = `
             <div class="card h-100 shadow-sm rounded-3 overflow-hidden">
-                ${receita.image_url ?
-                    `<img src="${receita.image_url}" class="card-img-top img-fluid" style="height: 240px; object-fit: cover;" alt="${receita.title}">` :
-                    `<div class="card-img-top d-flex align-items-center justify-content-center text-secondary bg-light" style="height: 240px;">
-                        <i class="bi bi-image" style="font-size: 4rem;"></i>
-                    </div>`
-                }
+                ${imageHTML}
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title text-truncate mb-2">${receita.title}</h5>
                     
                     <p class="card-text text-muted small mb-3 flex-grow-1">
                         <strong class="text-dark">Ingredientes:</strong> ${receita.ingredients.map(i => i.name).join(', ')}
                     </p>
-                    
-                    <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
-                        <div class="d-flex flex-wrap gap-2">
-                            <button class="btn btn-primary btn-sm" type="button"
-                                onclick="verPreparoComVerificacao('${receita.title.replace(/'/g, "\\'")}', \`${receita.description.replace(/`/g, '\\`')}\`)">
-                                <i class="bi bi-book me-1"></i> Ver preparo
-                            </button>
-                            <button class="btn btn-success btn-sm" type="button"
-                                onclick='salvarIngredientesNaLista(${JSON.stringify(receita.ingredients)})'>
-                                Adicionar à lista 🛒
-                            </button>
-                        </div>
 
-                        ${userRole === "creator" ? `
-                            <div class="dropdown mt-sm-0 align-self-end">
-                                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Ações
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <li>
-                                        <button class="dropdown-item text-danger" type="button"
-                                            onclick="confirmarExclusao(${receita.id}, '${receita.title.replace(/'/g, "\\'")}')">
-                                            <i class="bi bi-trash me-1"></i> Remover
-                                        </button>
-                                    </li>
-                                    <li>
-                                        <button class="dropdown-item" type="button"
-                                            onclick="editarReceita(${receita.id})">
-                                            <i class="bi bi-gear me-1"></i> Editar
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>` : ''}
-                    </div>
+                    ${botoesHTML}
                 </div>
             </div>
         `;
+
         container.appendChild(div);
     });
 }
+
 
 function abrirModal(titulo, descricao) {
     const modalTitle = document.getElementById('preparoModalLabel');
@@ -280,3 +292,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     const { auth, role } = await verificarUsuario();
     carregarReceitas(auth, role);
 });
+
+async function curtirReceita(receitaId) {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+        const toast = new bootstrap.Toast(document.getElementById('toastCurtidaReceita'));
+        toast.show();
+        return;
+    }
+
+    try {
+        const response = await fetch(`/receitas/${receitaId}/curtir`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Erro ao curtir/descurtir a receita');
+        }
+
+        const data = await response.json();
+
+        // Atualiza a contagem de curtidas na interface
+        const span = document.getElementById(`qtdCurtidas-${receitaId}`);
+        let atual = parseInt(span.textContent) || 0;
+
+        if (data.curtido) {
+            span.textContent = atual + 1;
+        } else {
+            span.textContent = Math.max(atual - 1, 0);
+        }
+
+    } catch (error) {
+        console.error('Erro ao curtir receita:', error);
+        alert('Não foi possível registrar a curtida. Tente novamente.');
+    }
+}
