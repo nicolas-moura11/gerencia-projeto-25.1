@@ -3,16 +3,17 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.responses import RedirectResponse
-from routes.auth_routes import auth_router
+from models.users import UserDB
+from routers.auth_routes import auth_router
+from schemas.users import User
 from security import get_current_user, require_role
-from models import Recipe, User, UserDB 
 from pydantic import BaseModel
 from typing import List, Annotated
 from database import SessionLocal, engine
 from sqlalchemy.orm import Session
 from datetime import datetime
 from fastapi.middleware.cors import CORSMiddleware
-from routes import recipes
+from routers import recipes
 
 app = FastAPI()
 app.include_router(recipes.router)
@@ -26,23 +27,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from models import Base
+from models.users import Base
 Base.metadata.create_all(bind=engine)
-
-# # Schemas Pydantic
-# class RecipeBase(BaseModel):
-#     title: str
-#     description: str
-
-# class RecipeCreate(RecipeBase):
-#     post_time: datetime = datetime.now()
-
-# class RecipeResponse(RecipeBase):
-#     id: int
-#     post_time: datetime
-#     class Config:
-#         orm_mode = True
-
 
 def get_db():
     db = SessionLocal()
@@ -57,10 +43,6 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 app.include_router(auth_router)
-
-# @app.get("/users/me/", response_class=HTMLResponse)
-# async def read_users_me(current_user = Depends(get_current_user)):
-#     return {"username": current_user.username}
 
 @app.get("/auth", response_class=HTMLResponse)
 async def read_index(request: Request):
