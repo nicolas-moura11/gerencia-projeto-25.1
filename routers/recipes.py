@@ -1,9 +1,10 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from models import Recipe, Ingredient
-from models import RecipeCreate, RecipeResponse
-from security import get_current_user, get_db, require_role
+
+from models.recipes import Ingredient, Recipe
+from schemas.recipes import RecipeCreate, RecipeResponse
+from security import get_db, require_role
 
 router = APIRouter()
 
