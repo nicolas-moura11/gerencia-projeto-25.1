@@ -66,6 +66,13 @@ document.getElementById("register-form").addEventListener("submit", async functi
         return;
     }
 
+    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%#*?&-+])[A-Za-z\d@$!%#*?&-+]{8,}$/;
+
+    if (!strongPasswordRegex.test(password)) {
+        showAlert("A senha deve ter pelo menos 8 caracteres, incluindo 1 letra maiúscula, 1 letra minúscula, 1 número e 1 símbolo.", true);
+        return;
+    }
+
     try {
         const response = await fetch("/register", {
             method: "POST",
