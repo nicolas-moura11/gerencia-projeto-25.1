@@ -1,0 +1,32 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+    ports:
+      - "8070:8001" 
+    depends_on:
+      - db
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    networks:
+      - receita-net
+
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: recipesDB 
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - receita-net
+
+volumes:
+  postgres-data:
+
+networks:
+  receita-net:
