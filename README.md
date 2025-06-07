@@ -53,6 +53,6 @@ Para acessar, você pode clicar diretamente no link no terminal ou usar Ctrl + C
 Pronto! Agora você já pode usufruir do nosso produto.
 
 Criadores:
-Nícolas Moura
-João Víctor Batista
+Nícolas Moura,
+João Víctor Batista,
 Ian Vasconcelos
