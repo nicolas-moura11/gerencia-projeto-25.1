@@ -6,7 +6,7 @@ Como Utilizar?
 
 Siga este guia passo a passo para rodar o projeto em sua máquina.
 
-Passo 1: Baixar o Projeto e o Docker
+Passo 1: Baixar o Projeto, Docker Desktop e postgreSQL.
 
 Acesse o repositório do projeto no GitHub:
 
